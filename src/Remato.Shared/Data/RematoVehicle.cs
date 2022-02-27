@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
@@ -8,6 +9,13 @@ namespace Remato.Shared
     public class RematoVehicle
     {
         [JsonProperty("id")] public string VehicleId { get; set; }
+        
+        [JsonProperty("name")] public string Name { get; set; }
+        [JsonProperty("license_plate")] public string LicensePlate { get; set; }
+        [JsonProperty("vin")] public string VIN { get; set; }
+        
+        [JsonProperty("start_date")] public DateTime StartDate { get; set; }
+        [JsonProperty("end_date")] public DateTime EndDate { get; set; }
     }
     
     [JsonObject]
@@ -21,9 +29,17 @@ namespace Remato.Shared
     public class RematoVehicleListArgs : RematoListArgs
     {
         // TODO
-        // [QueryMember("id")] public string Id { get; set; }
-        // [QueryMember("username")] public string Username { get; set; }
+        [QueryMember("id")] public string Id { get; set; }
+        [QueryMember("name")] public string Name { get; set; }
         // [QueryMember("is_enabled")] public bool IsEnabled { get; set; }
         // [QueryMember("is_admin")] public bool IsAdmin { get; set; }
+    }
+
+    public enum RematoVehicleState
+    {
+        None = 0,
+        IsActive = 1,
+        InMaintenance = 2,
+        IsDiscarded = 3
     }
 }

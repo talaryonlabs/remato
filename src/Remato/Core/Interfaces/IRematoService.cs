@@ -1,18 +1,16 @@
-﻿using Remato.Params;
-using Talaryon;
+﻿using Talaryon;
 
 namespace Remato
 {
     public interface IRematoService
     {
-        IRematoServiceUser User(string userIdOrName);
-        IRematoServiceUsers Users();
+        IRematoUserService User(string userIdOrName);
+        IRematoUsersService Users();
 
         IRematoServiceDevice Device(string deviceId);
         IRematoServiceDevices Devices();
-
-        object Trainee(string traineeId);
-        object Trainees();
+        IRematoServiceTrainee Trainee(string traineeId);
+        IRematoServiceTrainees Trainees();
 
         IRematoServiceVehicle Vehicle(string vehicleId);
         IRematoServiceVehicles Vehicles();
@@ -38,15 +36,7 @@ namespace Remato
         
     }
     
-    public interface IRematoServiceUser : IRematoServiceEntity<UserEntity, IUserParams>
-    {
-        
-    }
     
-    public interface IRematoServiceUsers : IRematoServiceEntities<UserEntity, IUserParams>
-    {
-        
-    }
 
     public interface IRematoServiceVehicle : IRematoServiceEntity<VehicleEntity, IVehicleParams>
     {
@@ -67,5 +57,14 @@ namespace Remato
     {
         
     }
-
+    
+    public interface IRematoServiceTrainee : IRematoServiceEntity<TraineeEntity, ITraineeParams>
+    {
+        
+    }
+    
+    public interface IRematoServiceTrainees : IRematoServiceEntities<TraineeEntity, ITraineeParams>
+    {
+        
+    }
 }

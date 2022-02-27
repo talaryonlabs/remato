@@ -9,12 +9,11 @@
         
         public const string ManagementPolicy = "Management";
         public const string ManagementRole = "Admin";
-        
-        
-        public const string CachePrefix = "STORAGR";
-        public const string CacheUserPrefix = "STORAGR:USER";
-        public const string CacheRepositoryPrefix = "STORAGR:REPOSITORY";
-        public const string CacheObjectPrefix = "STORAGR:OBJECT";
-        public const string CacheLockPrefix = "STORAGR:LOCK";
+
+        public const string DatabaseTableUser = "users";
+        public const string DatabaseTableVehicle = "vehicles";
+        public const string DatabaseTableTrainee = "trainees";
+        public const string DatabaseTableDevice = "devices";
+        public const string DatabaseTableLog = "logs";
     }
 }

@@ -7,7 +7,7 @@ namespace Remato.Data.Migrations
     {
         public override void Up()
         {
-            Create.Table("User")
+            Create.Table(RematoConstants.DatabaseTableUser)
                 .WithColumn("Id").AsString().NotNullable().Unique().PrimaryKey()
                 .WithColumn("AuthId").AsString().NotNullable()
                 .WithColumn("AuthAdapter").AsString().NotNullable()

@@ -1,9 +1,11 @@
-﻿namespace Remato.Params
+﻿using Remato.Shared;
+
+namespace Remato
 {
     public interface IDeviceParams
     {
         IDeviceParams Id(string userId);
-        IDeviceParams IsActive(bool isActive);
+        IDeviceParams State(RematoDeviceState state);
         IDeviceParams Name(string name);
         IDeviceParams Manufacturer(string manufacturer);
     }

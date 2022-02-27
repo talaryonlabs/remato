@@ -78,10 +78,10 @@ namespace Remato.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoUser))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
-        public async Task<RematoUser> View([FromRoute] string userId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedError();
-        }
+        public async Task<RematoUser> View([FromRoute] string userId, CancellationToken cancellationToken) =>
+            await _rematoService
+                .User(userId)
+                .RunAsync(cancellationToken);
 
         [HttpPatch("{userId}")] 
         [Authorize(Policy = RematoConstants.ManagementPolicy)]
@@ -100,9 +100,10 @@ namespace Remato.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
         [ProducesResponseType(StatusCodes.Status501NotImplemented, Type = typeof(NotImplementedError))]
-        public async Task<RematoUser> Delete([FromRoute] string userId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedError();
-        }
+        public async Task<RematoUser> Delete([FromRoute] string userId, CancellationToken cancellationToken) =>
+            await _rematoService
+                .User(userId)
+                .Delete()
+                .RunAsync(cancellationToken);
     }
 }

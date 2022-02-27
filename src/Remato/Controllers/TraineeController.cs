@@ -13,6 +13,13 @@ namespace Remato.Controllers
     [ApiRoute("trainees")]
     public class TraineeController
     {
+        private readonly IRematoService _rematoService;
+
+        public TraineeController(IRematoService rematoService)
+        {
+            _rematoService = rematoService;
+        }
+
         [HttpGet]
         [Authorize(Policy = RematoConstants.ManagementPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoTraineeList))]
@@ -40,10 +47,10 @@ namespace Remato.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoTrainee))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
-        public async Task<RematoTrainee> View([FromRoute] string traineeId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedError();
-        }
+        public async Task<RematoTrainee> View([FromRoute] string traineeId, CancellationToken cancellationToken) =>
+            await _rematoService
+                .Trainee(traineeId)
+                .RunAsync(cancellationToken);
 
         [HttpPatch("{traineeId}")]
         [Authorize(Policy = RematoConstants.ManagementPolicy)]
@@ -62,9 +69,10 @@ namespace Remato.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
         [ProducesResponseType(StatusCodes.Status501NotImplemented, Type = typeof(NotImplementedError))]
-        public async Task<RematoTrainee> Delete([FromRoute] string traineeId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedError();
-        }
+        public async Task<RematoTrainee> Delete([FromRoute] string traineeId, CancellationToken cancellationToken) =>
+            await _rematoService
+                .Trainee(traineeId)
+                .Delete()
+                .RunAsync(cancellationToken);
     }
 }

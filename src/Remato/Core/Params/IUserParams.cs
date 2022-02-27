@@ -1,4 +1,4 @@
-﻿namespace Remato.Params
+﻿namespace Remato
 {
     public interface IUserParams
     {

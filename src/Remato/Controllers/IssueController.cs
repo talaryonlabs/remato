@@ -13,6 +13,13 @@ namespace Remato.Controllers
     [ApiRoute("issues")]
     public class IssueController
     {
+        private readonly IRematoService _rematoService;
+
+        public IssueController(IRematoService rematoService)
+        {
+            _rematoService = rematoService;
+        }
+
         [HttpGet]
         [Authorize(Policy = RematoConstants.ManagementPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoIssueList))]
@@ -40,10 +47,10 @@ namespace Remato.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoIssue))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
-        public async Task<RematoIssue> View([FromRoute] string issueId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedError();
-        }
+        public async Task<RematoIssue> View([FromRoute] string issueId, CancellationToken cancellationToken) =>
+            await _rematoService
+                .Issue(issueId)
+                .RunAsync(cancellationToken);
 
         [HttpPatch("{issueId}")]
         [Authorize(Policy = RematoConstants.ManagementPolicy)]
@@ -62,9 +69,10 @@ namespace Remato.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
         [ProducesResponseType(StatusCodes.Status501NotImplemented, Type = typeof(NotImplementedError))]
-        public async Task<RematoIssue> Delete([FromRoute] string issueId, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedError();
-        }
+        public async Task<RematoIssue> Delete([FromRoute] string issueId, CancellationToken cancellationToken) =>
+            await _rematoService
+                .Issue(issueId)
+                .Delete()
+                .RunAsync(cancellationToken);
     }
 }

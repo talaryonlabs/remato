@@ -11,7 +11,7 @@ namespace Remato.Data.Migrations
             var uid = TalaryonHelper.UUID();
             
             // Initial Admin User
-            Insert.IntoTable("User")
+            Insert.IntoTable(RematoConstants.DatabaseTableUser)
                 .Row(new
                 {
                     Id = uid,
@@ -33,15 +33,10 @@ namespace Remato.Data.Migrations
 
         public override void Down()
         {
-            Delete.FromTable("User")
+            Delete.FromTable(RematoConstants.DatabaseTableUser)
                 .Row(new
                 {
                     Username = "admin"
-                });
-            Delete.FromTable("Repository")
-                .Row(new
-                {
-                    Name = "test"
                 });
         }
     }
