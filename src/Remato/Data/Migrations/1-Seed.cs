@@ -1,4 +1,5 @@
-﻿using FluentMigrator;
+﻿using System;
+using FluentMigrator;
 using Talaryon;
 
 namespace Remato.Data.Migrations
@@ -18,17 +19,10 @@ namespace Remato.Data.Migrations
                     AuthId = uid,
                     AuthAdapter = "default",
                     Username = "admin",
+                    Name = "Administrator",
                     Password = "AQAAAAEAACcQAAAAEGTYFmFw+/mzx8Ef4yq2znUwkl5Y6Bs6ZV7NgINEG8GsomDerF2ZV0GfDIbmtBNhDw==", // _storagr
                 });
-
-            Insert.IntoTable("Repository")
-                .Row(new
-                {
-                    Id = TalaryonHelper.UUID(),
-                    Name = "test",
-                    OwnerId = uid,
-                    SizeLimit = 0
-                });
+            
         }
 
         public override void Down()

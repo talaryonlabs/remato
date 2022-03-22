@@ -20,19 +20,19 @@ using Remato.Security.Authenticators;
 using Remato.Services;
 using Remato.Shared;
 using Talaryon;
+using Talaryon.Services;
 
 namespace Remato
 {
     public static class RematoServices
     {
-        public static IServiceCollection AddRematoCore(this IServiceCollection services, StoragrConfig config)
+        public static IServiceCollection AddRematoCore(this IServiceCollection services, RematoConfig config)
         {
             var mediaType = new RematoMediaType();
-            var storagrConfig = config.Get<StoragrCoreConfig>();
 
             services.Configure<KestrelServerOptions>(options =>
             {
-                options.Listen(storagrConfig.Listen);
+                options.Listen(config.EndPoint);
             });
             
             services.AddHttpClient();
@@ -77,15 +77,12 @@ namespace Remato
                 });
 
             return services
-                .AddSingleton<IStoragrService, StoragrService>()
-                .AddSingleton<ICacheService, CacheService>()
-                .AddScoped<IBatchService, BatchService>();
+                .AddSingleton<IRematoService, RematoService>()
+                .AddSingleton<ICacheService, CacheService>();
         }
 
-        public static IServiceCollection AddRematoSecurity(this IServiceCollection services, StoragrConfig config)
+        public static IServiceCollection AddRematoSecurity(this IServiceCollection services, RematoConfig config)
         {
-            var tokenConfig = config.Get<TokenOptions>();
-
             services.AddAuthentication("_")
                 .AddPolicyScheme("_", "AuthRouter", options =>
                 {
@@ -106,7 +103,7 @@ namespace Remato
                 {
                     options.RequireHttpsMetadata = true;
                     options.SaveToken = true;
-                    options.TokenValidationParameters = tokenConfig;
+                    options.TokenValidationParameters = config.TokenOptions;
                     options.Events = new JwtBearerEvents()
                     {
                         OnChallenge = (context) =>
@@ -143,7 +140,7 @@ namespace Remato
             });
 
             services
-                .AddConfig<TokenOptions>(config)
+                .AddConfig(config.TokenOptions)
                 .AddSingleton<ITokenService, TokenService>();
 
             services.AddAuthentication<DefaultAuthenticator>();
@@ -151,23 +148,21 @@ namespace Remato
             return services;
         }
 
-        public static IServiceCollection AddRematoCache(this IServiceCollection services,  StoragrConfig config)
+        public static IServiceCollection AddRematoCache(this IServiceCollection services, RematoConfig config)
         {
-            var storagrConfig = config.Get<StoragrCoreConfig>();
-            
-            switch (storagrConfig.Cache)
+            switch (config.Cache)
             {
-                case StoragrCacheType.Memory:
+                case RematoConfigCache.Memory:
                     services.AddDistributedMemoryCache();
                     break;
                 
-                case StoragrCacheType.Redis:
-                    var redisConfig = config.Get<RedisCacheConfig>();
+                case RematoConfigCache.Redis:
+                    var redisConfig = config.RedisOptions;
                     
                     services.AddStackExchangeRedisCache(options =>
                     {
                         options.InstanceName = "redis";
-                        options.Configuration = redisConfig.Host;
+                        options.Configuration = redisConfig.InstanceName;
                     });
                     break;
                 
@@ -177,25 +172,23 @@ namespace Remato
             return services;
         }
 
-        public static IServiceCollection AddRematoDatabase(this IServiceCollection services, StoragrConfig config)
+        public static IServiceCollection AddRematoDatabase(this IServiceCollection services, RematoConfig config)
         {
-            var storagrConfig = config.Get<StoragrCoreConfig>();
-
             services
                 .AddFluentMigratorCore()
                 .ConfigureRunner(options =>
                 {
-                    switch (storagrConfig.Backend)
+                    switch (config.Database)
                     {
-                        case StoragrBackendType.Sqlite:
-                            var sqliteConfig = config.Get<SqliteOptions>();
+                        case RematoConfigDatabase.Sqlite:
+                            var sqliteConfig = config.SqliteOptions;
                             options
                                 .AddSQLite()
                                 .WithGlobalConnectionString($"Data Source={sqliteConfig.DataSource}");
                             break;
 
-                        case StoragrBackendType.MySql:
-                            var mysqlConfig = config.Get<MysqlOptions>();
+                        case RematoConfigDatabase.Mysql:
+                            var mysqlConfig = config.MysqlOptions;
                             options
                                 .AddMySql5()
                                 .WithGlobalConnectionString(
@@ -212,17 +205,17 @@ namespace Remato
                     options.ScanIn(typeof(Setup).Assembly).For.Migrations();
                 });
 
-            switch (storagrConfig.Backend)
+            switch (config.Database)
             {
-                case StoragrBackendType.Sqlite:
+                case RematoConfigDatabase.Sqlite:
                     services
-                        .AddConfig<SqliteOptions>(config)
+                        .AddConfig(config.SqliteOptions)
                         .AddBackend<SqliteAdapter>();
                     break;
                 
-                case StoragrBackendType.MySql:
+                case RematoConfigDatabase.Mysql:
                     services
-                        .AddConfig<MysqlOptions>(config)
+                        .AddConfig(config.MysqlOptions)
                         .AddBackend<MysqlAdapter>();
                     break;
                 

@@ -7,6 +7,7 @@ namespace Remato
     {
         IVehicleParams Id(string vehicleId);
         IVehicleParams Name(string name);
+        IVehicleParams State(string state) => State(Enum.Parse<RematoVehicleState>(state, true));
         IVehicleParams State(RematoVehicleState state);
         IVehicleParams LicensePlate(string licensePlate);
         IVehicleParams VIN(string vin);

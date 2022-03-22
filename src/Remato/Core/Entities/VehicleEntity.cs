@@ -10,6 +10,8 @@ namespace Remato
     {
         [ExplicitKey] public string Id { get; set; }
         
+        public bool IsDeleted { get; set; }
+        
         public RematoVehicleState State { get; set; }
         
         public string Name { get; set; }
@@ -18,6 +20,9 @@ namespace Remato
         
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        
+        public DateTime CreatedAt { get; set; }
+        public DateTime ChangedAt { get; set; }
 
         public static implicit operator RematoVehicle([NotNull] VehicleEntity entity) => new()
         {
@@ -26,7 +31,9 @@ namespace Remato
             LicensePlate = entity.LicensePlate,
             VIN = entity.VIN,
             StartDate = entity.StartDate,
-            EndDate = entity.EndDate
+            EndDate = entity.EndDate,
+            CreatedAt = entity.CreatedAt,
+            ChangedAt = entity.ChangedAt
         };
         
         public static implicit operator VehicleEntity([NotNull] RematoVehicle vehicle) => new()
@@ -36,7 +43,9 @@ namespace Remato
             LicensePlate = vehicle.LicensePlate,
             VIN = vehicle.VIN,
             StartDate = vehicle.StartDate,
-            EndDate = vehicle.EndDate
+            EndDate = vehicle.EndDate,
+            CreatedAt = vehicle.CreatedAt,
+            ChangedAt = vehicle.ChangedAt
         };
     }
 }

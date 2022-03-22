@@ -14,15 +14,10 @@
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.14" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.15" />
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="5.0.1" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Talaryon.Toolbox, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>..\..\..\toolbox\src\bin\Debug\net5.0\Talaryon.Toolbox.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -30,6 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\..\Toolbox\src\Toolbox.csproj" />
       <ProjectReference Include="..\Remato.Shared\Remato.Shared.csproj" />
     </ItemGroup>
 

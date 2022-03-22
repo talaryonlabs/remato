@@ -15,5 +15,8 @@
         public const string DatabaseTableTrainee = "trainees";
         public const string DatabaseTableDevice = "devices";
         public const string DatabaseTableLog = "logs";
+        public const string DatabaseTableComment = "comments";
+        public const string DatabaseTableIssue = "issues";
+        public const string DatabaseTableJob = "jobs";
     }
 }

@@ -8,11 +8,11 @@ using Remato.Shared;
 
 namespace Remato.Controllers
 {
-    [Authorize]
+    // [Authorize(Policy = RematoConstants.ManagementPolicy)]
     [ApiController]
     [ApiVersion("1.0")]
     [ApiRoute("users")]
-    public class UserController
+    public class UserController : Controller
     {
         private readonly IRematoService _rematoService;
 
@@ -22,7 +22,6 @@ namespace Remato.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = RematoConstants.ManagementPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoUserList))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
         public async Task<RematoUserList> List([FromQuery] RematoUserListArgs listArgs,
@@ -44,7 +43,7 @@ namespace Remato.Controllers
                     .Take(listArgs.Limit)
                     .Where(userParams => userParams
                         .Id(listArgs.Id)
-                        .Username(listArgs.Username)
+                        .Username(listArgs.Mail)
                         .IsAdmin(listArgs.IsAdmin)
                         .IsEnabled(listArgs.IsEnabled)
                     )
@@ -62,19 +61,24 @@ namespace Remato.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = RematoConstants.ManagementPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoUser))]
         [ProducesResponseType(StatusCodes.Status409Conflict, Type = typeof(ConflictError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
         [ProducesResponseType(StatusCodes.Status501NotImplemented, Type = typeof(NotImplementedError))]
         public async Task<RematoUser> Create([FromBody] RematoRequest<RematoUser> createRequest,
-            CancellationToken cancellationToken)
-        {
-            throw new NotImplementedError();
-        }
+            CancellationToken cancellationToken) =>
+            await _rematoService
+                .User((string)createRequest.Items["username"])
+                .Create()
+                .With(createParams => createParams
+                    .IsAdmin(false)
+                    .IsEnabled(true)
+                    .Name((string)createRequest.Items["name"])
+                    .Password((string)createRequest.Items["password"])
+                )
+                .RunAsync(cancellationToken);
 
         [HttpGet("{userId}")]
-        [Authorize(Policy = RematoConstants.ManagementPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoUser))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
@@ -84,18 +88,33 @@ namespace Remato.Controllers
                 .RunAsync(cancellationToken);
 
         [HttpPatch("{userId}")] 
-        [Authorize(Policy = RematoConstants.ManagementPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoUser))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]
         public async Task<RematoUser> Update([FromRoute] string userId,
             [FromBody] RematoRequest<RematoUser> updateRequest, CancellationToken cancellationToken)
         {
-            throw new NotImplementedError();
+            return await _rematoService
+                .User(userId)
+                .Update()
+                .With(updateParams =>
+                {
+                    if (updateRequest.Items.ContainsKey("username"))
+                        updateParams.Username((string)updateRequest.Items["username"]);
+                    
+                    if (updateRequest.Items.ContainsKey("is_admin"))
+                        updateParams.IsAdmin((bool)updateRequest.Items["is_admin"]);
+                    
+                    if (updateRequest.Items.ContainsKey("is_enabled"))
+                        updateParams.IsEnabled((bool)updateRequest.Items["is_enabled"]);
+                    
+                    if (updateRequest.Items.ContainsKey("password"))
+                        updateParams.Password((string)updateRequest.Items["password"]);
+                })
+                .RunAsync(cancellationToken);
         }
 
         [HttpDelete("{userId}")]
-        [Authorize(Policy = RematoConstants.ManagementPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RematoUser))]
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(NotFoundError))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(InternalServerError))]

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
@@ -8,6 +9,12 @@ namespace Remato.Shared
     public class RematoTrainee
     {
         [JsonProperty("id")] public string TraineeId { get; set; }
+        
+        [JsonProperty("name")] public string Name { get; set; }
+        
+        [JsonProperty("is_deleted")] public bool IsDeleted { get; set; }
+        [JsonProperty("created_at")] public DateTime CreatedAt { get; set; }
+        [JsonProperty("changed_at")] public DateTime ChangedAt { get; set; }
     }
         
     [JsonObject]

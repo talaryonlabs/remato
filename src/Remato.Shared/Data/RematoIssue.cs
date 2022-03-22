@@ -9,11 +9,16 @@ namespace Remato.Shared
     public class RematoIssue
     {
         [JsonProperty("id")] public string IssueId { get; set; }
+        [JsonProperty("message")] public string Message { get; set; }
+        [JsonProperty("issuer")] public string Issuer { get; set; }
+
+        [JsonProperty("created_at")] public DateTime CreatedAt { get; set; }
+        [JsonProperty("changed_at")] public DateTime ChangedAt { get; set; }
+        
         [JsonProperty("content_id")] public string ContentId { get; set; }
         [JsonProperty("content_type")] public string ContentType { get; set; }
-        [JsonProperty("user_id")] public string UserId { get; set; }
-        [JsonProperty("date")] public DateTime Date { get; set; }
-        [JsonProperty("message")] public string Message { get; set; }
+
+        [JsonProperty("is_deleted")] public bool IsDeleted { get; set; }
     }
     
     [JsonObject]

@@ -13,7 +13,7 @@ namespace Remato.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [ApiRoute("vehicles")]
-    public class VehicleController
+    public class VehicleController : Controller
     {
         private readonly IRematoService _rematoService;
 
@@ -72,6 +72,9 @@ namespace Remato.Controllers
                 .Create()
                 .With(createParams =>
                 {
+                    if (createRequest.Items.ContainsKey("state"))
+                        createParams.State((string)createRequest.Items["state"]);
+                    
                     // TODO create vehicle
                     // createParams.StartDate((DateTime)createRequest.Items["startDate"]);
                 })

@@ -1,4 +1,5 @@
-﻿using FluentMigrator;
+﻿using System;
+using FluentMigrator;
 
 namespace Remato.Data.Migrations
 {
@@ -7,70 +8,72 @@ namespace Remato.Data.Migrations
     {
         public override void Up()
         {
+            Create.Table(RematoConstants.DatabaseTableLog)
+                .WithColumn("Id").AsInt32().Unique().PrimaryKey()
+                .WithColumn("Date").AsDateTime2().NotNullable()
+                .WithColumn("ContentId").AsString().NotNullable()
+                .WithColumn("UserId").AsString().NotNullable()
+                .WithColumn("Message").AsString().NotNullable()
+                .WithColumn("Exception").AsString();
+
             Create.Table(RematoConstants.DatabaseTableUser)
                 .WithColumn("Id").AsString().NotNullable().Unique().PrimaryKey()
                 .WithColumn("AuthId").AsString().NotNullable()
                 .WithColumn("AuthAdapter").AsString().NotNullable()
                 .WithColumn("IsEnabled").AsBoolean().WithDefaultValue(true)
+                .WithColumn("IsDeleted").AsBoolean().WithDefaultValue(false)
                 .WithColumn("IsAdmin").AsBoolean().WithDefaultValue(false)
                 .WithColumn("Username").AsString().NotNullable().Unique()
-                .WithColumn("Password").AsString().NotNullable();
+                .WithColumn("Password").AsString().NotNullable()
+                .WithColumn("Mail").AsString().Nullable()
+                .WithColumn("Name").AsString().NotNullable()
+                .WithColumn("CreatedAt").AsDateTime().WithDefaultValue(DateTime.Now)
+                .WithColumn("ChangedAt").AsDateTime().WithDefaultValue(DateTime.Now);
 
-            Create.Table("Repository")
+            Create.Table(RematoConstants.DatabaseTableVehicle)
                 .WithColumn("Id").AsString().NotNullable().Unique().PrimaryKey()
-                .WithColumn("Name").AsString().NotNullable().Unique()
-                .WithColumn("OwnerId").AsString().NotNullable()
-                .WithColumn("SizeLimit").AsInt64().NotNullable();
+                .WithColumn("IsEnabled").AsBoolean().WithDefaultValue(true)
+                .WithColumn("IsDeleted").AsBoolean().WithDefaultValue(false)
+                .WithColumn("CreatedAt").AsDateTime().NotNullable()
+                .WithColumn("ChangedAt").AsDateTime().NotNullable()
+                .WithColumn("Name").AsString().NotNullable()
+                .WithColumn("State").AsString().NotNullable()
+                .WithColumn("VIN").AsString().NotNullable()
+                .WithColumn("License").AsString().NotNullable()
+                .WithColumn("StartDate").AsDateTime().NotNullable()
+                .WithColumn("EndDate").AsDateTime().NotNullable()
+                .WithColumn("Note").AsString();
 
-            Create.Table("Object")
+            Create.Table(RematoConstants.DatabaseTableJob)
                 .WithColumn("Id").AsString().NotNullable().Unique().PrimaryKey()
-                .WithColumn("RepositoryId").AsString().NotNullable()
-                .WithColumn("Size").AsInt64().NotNullable();
+                .WithColumn("IsDone").AsBoolean().WithDefaultValue(false)
+                .WithColumn("IsDeleted").AsBoolean().WithDefaultValue(false)
+                .WithColumn("CreatedAt").AsDateTime().NotNullable()
+                .WithColumn("ChangedAt").AsDateTime().NotNullable()
+                .WithColumn("Title").AsString().NotNullable()
+                .WithColumn("Description").AsString().NotNullable()
+                .WithColumn("Type").AsString().NotNullable()
+                .WithColumn("Date").AsDateTime().NotNullable();
 
-            Create.Table("Lock")
-                .WithColumn("Id").AsString().NotNullable().Unique().PrimaryKey()
-                .WithColumn("OwnerId").AsString().NotNullable()
-                .WithColumn("RepositoryId").AsString().NotNullable()
-                .WithColumn("Path").AsString().NotNullable()
-                .WithColumn("LockedAt").AsDateTime2().NotNullable();
-
-            Create.Table("Log")
-                .WithColumn("Id").AsInt32().Unique().PrimaryKey()
-                .WithColumn("Date").AsDateTime2().NotNullable()
-                .WithColumn("Level").AsString().NotNullable()
-                .WithColumn("Category").AsString().NotNullable()
-                .WithColumn("Message").AsString().NotNullable()
-                .WithColumn("Exception").AsString();
-
-            Create.ForeignKey("FK_Repository_User")
-                .FromTable("Repository").ForeignColumn("OwnerId")
-                .ToTable("User").PrimaryColumn("Id");
-            
-            Create.ForeignKey("FK_Object_Repository")
-                .FromTable("Object").ForeignColumn("RepositoryId")
-                .ToTable("Repository").PrimaryColumn("Id");
-            
-            Create.ForeignKey("FK_Lock_User")
-                .FromTable("Lock").ForeignColumn("OwnerId")
-                .ToTable("User").PrimaryColumn("Id");
-            
-            Create.ForeignKey("FK_Lock_Repository")
-                .FromTable("Lock").ForeignColumn("RepositoryId")
-                .ToTable("Repository").PrimaryColumn("Id");
+            Create.ForeignKey($"FK_{RematoConstants.DatabaseTableLog}_{RematoConstants.DatabaseTableUser}")
+                .FromTable(RematoConstants.DatabaseTableLog).ForeignColumn("UserId")
+                .ToTable(RematoConstants.DatabaseTableUser).PrimaryColumn("Id");
         }
 
         public override void Down()
         {
-            Delete.ForeignKey("FK_Repository_User");
-            Delete.ForeignKey("FK_Object_Repository");
-            Delete.ForeignKey("FK_Lock_User");
-            Delete.ForeignKey("FK_Lock_Repository");
-            
-            Delete.Table("User");
-            Delete.Table("Repository");
-            Delete.Table("Object");
-            Delete.Table("Lock");
-            Delete.Table("Log");
+            Delete.ForeignKey($"FK_{RematoConstants.DatabaseTableVehicle}_{RematoConstants.DatabaseTableUser}");
+
+            Delete.Table(RematoConstants.DatabaseTableLog);
+            Delete.Table(RematoConstants.DatabaseTableUser);
+            Delete.Table(RematoConstants.DatabaseTableVehicle);
+            Delete.Table(RematoConstants.DatabaseTableJob);
+
+            // TODO
+            // Delete.Table(RematoConstants.DatabaseTableDevice);
+            // Delete.Table(RematoConstants.DatabaseTableComment);
+            // Delete.Table(RematoConstants.DatabaseTableIssue);
+            // Delete.Table(RematoConstants.DatabaseTableTrainee);
         }
     }
 }

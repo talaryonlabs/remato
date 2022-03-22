@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
@@ -7,24 +8,37 @@ namespace Remato.Shared
     [JsonObject]
     public class RematoLog
     {
-        [JsonProperty("id")] public string LogId { get; set; }
+        [JsonProperty("id")] public int LogId { get; set; }
+        [JsonProperty("type")] public RematoLogType Type { get; set; }
+        [JsonProperty("date")] public DateTime Date { get; set; }
+        [JsonProperty("message")] public string Message { get; set; }
+        
+        [JsonProperty("user_id")] public string UserId { get; set; }
+        [JsonProperty("user_name")] public string UserName { get; set; }
+        
+        [JsonProperty("content_id")] public string ContentId { get; set; }
+        [JsonProperty("content_type")] public RematoContentType ContentType { get; set; }
+    }
+
+    public enum RematoLogType
+    {
+        Error,
+        Added,
+        Changed,
+        Deleted
     }
     
         
     [JsonObject]
     public class RematoLogList : RematoList<RematoLog>
     {
-        [JsonProperty("vehicles")] 
+        [JsonProperty("logs")] 
         public override IEnumerable<RematoLog> Items { get; set; } = new List<RematoLog>();
     }
     
     [DataContract]
     public class RematoLogListArgs : RematoListArgs
     {
-        // TODO
-        // [QueryMember("id")] public string Id { get; set; }
-        // [QueryMember("username")] public string Username { get; set; }
-        // [QueryMember("is_enabled")] public bool IsEnabled { get; set; }
-        // [QueryMember("is_admin")] public bool IsAdmin { get; set; }
+        [QueryMember("content_id")] public string ContentId { get; set; }
     }
 }

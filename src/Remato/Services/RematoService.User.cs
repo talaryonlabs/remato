@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Remato.Shared;
 using Talaryon;
 
@@ -10,46 +11,46 @@ namespace Remato.Services
 {
     public partial class RematoService
     {
-        private class VehicleItem : IRematoServiceVehicle, IVehicleParams, ITalaryonRunner<bool>,
-            ITalaryonParams<VehicleEntity, IVehicleParams>
+        private class UserItem : IRematoUserService, IUserParams, ITalaryonRunner<bool>,
+            ITalaryonParams<UserEntity, IUserParams>
         {
             private readonly RematoService _rematoService;
-            private readonly string _vehicleIdOrName;
+            private readonly string _userIdOrName;
 
-            private VehicleEntity _createRequest;
+            private UserEntity _createRequest;
             private Dictionary<string, object> _updateRequest;
             private bool _deleteRequest;
 
-            public VehicleItem(RematoService rematoService, string vehicleIdOrName)
+            public UserItem(RematoService rematoService, string userIdOrName)
             {
                 _rematoService = rematoService;
-                _vehicleIdOrName = vehicleIdOrName;
+                _userIdOrName = userIdOrName;
             }
 
-            VehicleEntity ITalaryonRunner<VehicleEntity>.Run() => (this as ITalaryonRunner<VehicleEntity>)
+            UserEntity ITalaryonRunner<UserEntity>.Run() => (this as ITalaryonRunner<UserEntity>)
                 .RunAsync()
                 .RunSynchronouslyWithResult();
 
-            async Task<VehicleEntity> ITalaryonRunner<VehicleEntity>.RunAsync(CancellationToken cancellationToken)
+            async Task<UserEntity> ITalaryonRunner<UserEntity>.RunAsync(CancellationToken cancellationToken)
             {
                 var cachedItem = await _rematoService
                     .Cache
-                    .Key<VehicleEntity>(RematoCaching.GetKey(RematoCachingName.Vehicle, _vehicleIdOrName))
+                    .Key<UserEntity>(RematoCaching.GetKey(RematoCachingName.User, _userIdOrName))
                     .RunAsync(cancellationToken);
 
                 var entityItem = cachedItem ?? await _rematoService
                     .Database
-                    .First<VehicleEntity>()
+                    .First<UserEntity>()
                     .Where(filter => filter
-                        .Is(nameof(VehicleEntity.IsDeleted))
+                        .Is(nameof(UserEntity.IsDeleted))
                         .EqualTo(false)
                         .And()
-                        .Clamp(pattern => pattern
-                            .Is(nameof(VehicleEntity.Id))
-                            .EqualTo(_vehicleIdOrName)
+                        .Clamp(filter2 => filter2
+                            .Is(nameof(UserEntity.Id))
+                            .EqualTo(_userIdOrName)
                             .Or()
-                            .Is(nameof(VehicleEntity.Name))
-                            .EqualTo(_vehicleIdOrName)
+                            .Is(nameof(UserEntity.Username))
+                            .EqualTo(_userIdOrName)
                         )
                     )
                     .RunAsync(cancellationToken);
@@ -57,8 +58,11 @@ namespace Remato.Services
                 if (_createRequest is not null)
                 {
                     if (entityItem is not null)
-                        throw new VehicleAlreadyExistsError(entityItem);
+                        throw new UserAlreadyExistsError(entityItem);
 
+                    entityItem.Password = new PasswordHasher<UserEntity>()
+                        .HashPassword(entityItem, entityItem.Password);
+                    
                     // ReSharper disable once HeuristicUnreachableCode
                     entityItem = await _rematoService
                         .Database
@@ -67,37 +71,32 @@ namespace Remato.Services
                 }
 
                 if (entityItem is null)
-                    throw new VehicleNotFoundError();
+                    throw new UserNotFoundError();
 
                 if (_updateRequest is not null)
                 {
                     entityItem.ChangedAt = DateTime.Now;
+                    entityItem.Username = (string)(_updateRequest.GetValueOrDefault("username") ?? entityItem.Username);
+                    entityItem.Name = (string)(_updateRequest.GetValueOrDefault("name") ?? entityItem.Name);
+                    entityItem.Mail = (string)(_updateRequest.GetValueOrDefault("mail") ?? entityItem.Mail);
 
-                    if (_updateRequest.ContainsKey("name"))
-                        entityItem.Name = (string)_updateRequest["name"];
-
-                    if (_updateRequest.ContainsKey("state"))
-                        entityItem.State = (RematoVehicleState)_updateRequest["state"];
-
-                    if (_updateRequest.ContainsKey("vin"))
-                        entityItem.VIN = (string)_updateRequest["vin"];
-
-                    if (_updateRequest.ContainsKey("licensePlate"))
-                        entityItem.LicensePlate = (string)_updateRequest["licensePlate"];
-
-                    if (_updateRequest.ContainsKey("startDate"))
-                        entityItem.StartDate = (DateTime)_updateRequest["startDate"];
-
-                    if (_updateRequest.ContainsKey("endTime"))
-                        entityItem.EndDate = (DateTime)_updateRequest["endTime"];
+                    if (_updateRequest.ContainsKey("password"))
+                        entityItem.Password = new PasswordHasher<UserEntity>()
+                            .HashPassword(entityItem, (string)_updateRequest["password"]);
+                    
+                    if (_updateRequest.ContainsKey("is_enabled"))
+                        entityItem.IsEnabled = (bool)_updateRequest["is_enabled"];
+                    
+                    if (_updateRequest.ContainsKey("is_admin"))
+                        entityItem.IsAdmin = (bool)_updateRequest["is_admin"];
 
                     await Task.WhenAll(
                         _rematoService
                             .Cache
                             .RemoveMany(new[]
                             {
-                                RematoCaching.GetKey(RematoCachingName.Vehicle, entityItem.Id),
-                                RematoCaching.GetKey(RematoCachingName.Vehicle, entityItem.Name)
+                                RematoCaching.GetKey(RematoCachingName.User, entityItem.Id),
+                                RematoCaching.GetKey(RematoCachingName.User, entityItem.Username)
                             })
                             .RunAsync(cancellationToken),
                         _rematoService
@@ -109,21 +108,21 @@ namespace Remato.Services
 
                 if (_deleteRequest)
                 {
-                    entityItem.ChangedAt = DateTime.Now;
                     entityItem.IsDeleted = true;
+                    entityItem.ChangedAt = DateTime.Now;
 
                     await Task.WhenAll(
                         _rematoService
                             .Cache
                             .RemoveMany(new[]
                             {
-                                RematoCaching.GetKey(RematoCachingName.Vehicle, entityItem.Id),
-                                RematoCaching.GetKey(RematoCachingName.Vehicle, entityItem.Name)
+                                RematoCaching.GetKey(RematoCachingName.User, entityItem.Id),
+                                RematoCaching.GetKey(RematoCachingName.User, entityItem.Username)
                             })
                             .RunAsync(cancellationToken),
                         _rematoService
                             .Database
-                            .Delete(entityItem)
+                            .Update(entityItem)
                             .RunAsync(cancellationToken)
                     );
                 }
@@ -132,12 +131,12 @@ namespace Remato.Services
                     await Task.WhenAll(
                         _rematoService
                             .Cache
-                            .Key<VehicleEntity>(RematoCaching.GetKey(RematoCachingName.Vehicle, entityItem.Id))
+                            .Key<UserEntity>(RematoCaching.GetKey(RematoCachingName.User, entityItem.Id))
                             .Set(entityItem)
                             .RunAsync(cancellationToken),
                         _rematoService
                             .Cache
-                            .Key<VehicleEntity>(RematoCaching.GetKey(RematoCachingName.Vehicle, entityItem.Name))
+                            .Key<UserEntity>(RematoCaching.GetKey(RematoCachingName.User, entityItem.Username))
                             .Set(entityItem)
                             .RunAsync(cancellationToken)
                     );
@@ -156,9 +155,9 @@ namespace Remato.Services
             {
                 try
                 {
-                    await (this as ITalaryonRunner<VehicleEntity>).RunAsync(cancellationToken);
+                    await (this as ITalaryonRunner<UserEntity>).RunAsync(cancellationToken);
                 }
-                catch (VehicleNotFoundError)
+                catch (UserNotFoundError)
                 {
                     return false;
                 }
@@ -167,113 +166,112 @@ namespace Remato.Services
             }
 
 
-            ITalaryonParams<VehicleEntity, IVehicleParams> ITalaryonCreatable<VehicleEntity, IVehicleParams>.Create()
+            ITalaryonParams<UserEntity, IUserParams> ITalaryonCreatable<UserEntity, IUserParams>.Create()
             {
-                _createRequest = new VehicleEntity()
+                _createRequest = new UserEntity()
                 {
                     Id = TalaryonHelper.UUID(),
+                    Username = _userIdOrName,
                     CreatedAt = DateTime.Now,
-                    ChangedAt = DateTime.Now,
-                    State = RematoVehicleState.None
+                    ChangedAt = DateTime.Now
                 };
                 return this;
             }
 
-            ITalaryonParams<VehicleEntity, IVehicleParams> ITalaryonUpdatable<VehicleEntity, IVehicleParams>.Update()
+            ITalaryonParams<UserEntity, IUserParams> ITalaryonUpdatable<UserEntity, IUserParams>.Update()
             {
                 _updateRequest = new Dictionary<string, object>();
                 return this;
             }
 
-            ITalaryonRunner<VehicleEntity> ITalaryonDeletable<VehicleEntity>.Delete(bool force)
+            ITalaryonRunner<UserEntity> ITalaryonDeletable<UserEntity>.Delete(bool force)
             {
                 _deleteRequest = true;
                 return this;
             }
 
-            ITalaryonRunner<VehicleEntity> ITalaryonParams<VehicleEntity, IVehicleParams>.With(
-                Action<IVehicleParams> withParams)
+            ITalaryonRunner<UserEntity> ITalaryonParams<UserEntity, IUserParams>.With(Action<IUserParams> withParams)
             {
                 withParams(this);
                 return this;
             }
 
-            IVehicleParams IVehicleParams.Id(string vehicleId)
+            IUserParams IUserParams.Id(string userId)
             {
                 // skipping - cannot modifiy id
                 return this;
             }
 
-            IVehicleParams IVehicleParams.Name(string name)
+            IUserParams IUserParams.Username(string name)
             {
                 if (_createRequest is not null) _createRequest.Name = name;
                 _updateRequest?.Add(nameof(name), name);
                 return this;
             }
 
-            IVehicleParams IVehicleParams.State(RematoVehicleState state)
+            IUserParams IUserParams.Password(string password)
             {
-                if (_createRequest is not null) _createRequest.State = state;
-                _updateRequest?.Add(nameof(state), state);
+                if (_createRequest is not null) _createRequest.Password = password;
+                _updateRequest?.Add(nameof(password), password);
                 return this;
             }
 
-            IVehicleParams IVehicleParams.LicensePlate(string licensePlate)
+            IUserParams IUserParams.Mail(string mail)
             {
-                if (_createRequest is not null) _createRequest.LicensePlate = licensePlate;
-                _updateRequest?.Add(nameof(licensePlate), licensePlate);
+                if (_createRequest is not null) _createRequest.Mail = mail;
+                _updateRequest?.Add(nameof(mail), mail);
                 return this;
             }
 
-            IVehicleParams IVehicleParams.VIN(string vin)
+            IUserParams IUserParams.Name(string name)
             {
-                if (_createRequest is not null) _createRequest.VIN = vin;
-                _updateRequest?.Add(nameof(vin), vin);
+                if (_createRequest is not null) _createRequest.Name = name;
+                _updateRequest?.Add(nameof(name), name);
                 return this;
             }
 
-            IVehicleParams IVehicleParams.StartDate(DateTime startDate)
+            IUserParams IUserParams.IsEnabled(bool isEnabled)
             {
-                if (_createRequest is not null) _createRequest.StartDate = startDate;
-                _updateRequest?.Add(nameof(startDate), startDate);
+                if (_createRequest is not null) _createRequest.IsEnabled = isEnabled;
+                _updateRequest?.Add(nameof(isEnabled), isEnabled);
                 return this;
             }
 
-            IVehicleParams IVehicleParams.EndDate(DateTime endDate)
+            IUserParams IUserParams.IsAdmin(bool isAdmin)
             {
-                if (_createRequest is not null) _createRequest.EndDate = endDate;
-                _updateRequest?.Add(nameof(endDate), endDate);
+                if (_createRequest is not null) _createRequest.IsAdmin = isAdmin;
+                _updateRequest?.Add(nameof(isAdmin), isAdmin);
                 return this;
             }
         }
 
-        class VehicleList : IRematoServiceVehicles, IVehicleParams
+        class UserList : IRematoUsersService, IUserParams
         {
             private readonly RematoService _rematoService;
-            private readonly VehicleEntity _entity;
+            private readonly UserEntity _entity;
 
             private int _take, _skip;
             private string _skipUntil;
 
-            public VehicleList(RematoService rematoService)
+            public UserList(RematoService rematoService)
             {
                 _rematoService = rematoService;
-                _entity = new VehicleEntity();
+                _entity = new UserEntity();
             }
 
-            IEnumerable<VehicleEntity> ITalaryonRunner<IEnumerable<VehicleEntity>>.Run() =>
-                (this as ITalaryonRunner<IEnumerable<VehicleEntity>>)
+            IEnumerable<UserEntity> ITalaryonRunner<IEnumerable<UserEntity>>.Run() =>
+                (this as ITalaryonRunner<IEnumerable<UserEntity>>)
                 .RunAsync()
                 .RunSynchronouslyWithResult();
 
-            async Task<IEnumerable<VehicleEntity>> ITalaryonRunner<IEnumerable<VehicleEntity>>.RunAsync(
+            async Task<IEnumerable<UserEntity>> ITalaryonRunner<IEnumerable<UserEntity>>.RunAsync(
                 CancellationToken cancellationToken)
             {
-                var vehicles = await _rematoService
+                var users = await _rematoService
                     .Database
-                    .Many<VehicleEntity>()
+                    .Many<UserEntity>()
                     .Where(filter => filter
-                        .Is(nameof(VehicleEntity.IsDeleted))
+                        .Is(nameof(UserEntity.IsDeleted))
                         .EqualTo(false)
                         .And()
                         // .Is(nameof(UserEntity.IsEnabled))
@@ -287,100 +285,98 @@ namespace Remato.Services
                             if (_entity.Id is not null)
                             {
                                 pattern
-                                    .Is(nameof(VehicleEntity.Id))
+                                    .Is(nameof(UserEntity.Id))
                                     .Like(_entity.Id)
                                     .Or();
                             }
 
-                            if (_entity.Name is not null)
+                            if (_entity.Username is not null)
                             {
                                 pattern
-                                    .Is(nameof(VehicleEntity.Name))
-                                    .Like(_entity.Name)
+                                    .Is(nameof(UserEntity.Username))
+                                    .Like(_entity.Username)
                                     .Or();
                             }
                         })
                     )
                     .RunAsync(cancellationToken);
 
-                return vehicles
+                return users
                     .Skip(_skip)
                     .SkipWhile(e => _skipUntil is not null && e.Id != _skipUntil)
                     .Take(_take)
-                    .Select(v => (VehicleEntity)v);
+                    .Select(v => (UserEntity)v);
             }
 
             ITalaryonRunner<int> ITalaryonCountable.Count() => _rematoService
                 .Database
                 .Count<UserEntity>();
 
-            ITalaryonEnumerable<VehicleEntity, IVehicleParams> ITalaryonEnumerable<VehicleEntity, IVehicleParams>.Take(
-                int count)
+            ITalaryonEnumerable<UserEntity, IUserParams> ITalaryonEnumerable<UserEntity, IUserParams>.Take(int count)
             {
                 _take = count;
                 return this;
             }
 
-            ITalaryonEnumerable<VehicleEntity, IVehicleParams> ITalaryonEnumerable<VehicleEntity, IVehicleParams>.Skip(
-                int count)
+            ITalaryonEnumerable<UserEntity, IUserParams> ITalaryonEnumerable<UserEntity, IUserParams>.Skip(int count)
             {
                 _skip = count;
                 return this;
             }
 
-            ITalaryonEnumerable<VehicleEntity, IVehicleParams> ITalaryonEnumerable<VehicleEntity, IVehicleParams>.
-                SkipUntil(string cursor)
+            ITalaryonEnumerable<UserEntity, IUserParams> ITalaryonEnumerable<UserEntity, IUserParams>.SkipUntil(
+                string cursor)
             {
                 _skipUntil = cursor;
                 return this;
             }
 
-            ITalaryonEnumerable<VehicleEntity, IVehicleParams> ITalaryonEnumerable<VehicleEntity, IVehicleParams>.Where(
-                Action<IVehicleParams> whereParams)
+            ITalaryonEnumerable<UserEntity, IUserParams> ITalaryonEnumerable<UserEntity, IUserParams>.Where(
+                Action<IUserParams> whereParams)
             {
                 whereParams(this);
                 return this;
             }
 
-            IVehicleParams IVehicleParams.Id(string vehicleId)
+            IUserParams IUserParams.Id(string userId)
             {
-                _entity.Id = vehicleId;
+                _entity.Id = userId;
                 return this;
             }
 
-            IVehicleParams IVehicleParams.Name(string name)
+            IUserParams IUserParams.Username(string username)
+            {
+                _entity.Username = username;
+                return this;
+            }
+
+            IUserParams IUserParams.Password(string password)
+            {
+                _entity.Password = password;
+                return this;
+            }
+
+            IUserParams IUserParams.Mail(string mail)
+            {
+                _entity.Mail = mail;
+                return this;
+            }
+
+            IUserParams IUserParams.Name(string name)
             {
                 _entity.Name = name;
                 return this;
             }
 
-            IVehicleParams IVehicleParams.State(RematoVehicleState state)
+            IUserParams IUserParams.IsEnabled(bool isEnabled)
             {
-                _entity.State = state;
+                _entity.IsEnabled = isEnabled;
                 return this;
             }
 
-            IVehicleParams IVehicleParams.LicensePlate(string licensePlate)
+            IUserParams IUserParams.IsAdmin(bool isAdmin)
             {
-                _entity.LicensePlate = licensePlate;
-                return this;
-            }
-
-            IVehicleParams IVehicleParams.VIN(string vin)
-            {
-                _entity.VIN = vin;
-                return this;
-            }
-
-            IVehicleParams IVehicleParams.StartDate(DateTime startDate)
-            {
-                _entity.StartDate = startDate;
-                return this;
-            }
-
-            IVehicleParams IVehicleParams.EndDate(DateTime endDate)
-            {
-                _entity.EndDate = endDate;
+                _entity.IsAdmin = isAdmin;
                 return this;
             }
         }

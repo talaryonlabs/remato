@@ -18,17 +18,26 @@ namespace Remato
         
         public DateTime EntryDate { get; set; }
         public DateTime EndDate { get; set; }
+        
+        public DateTime CreatedAt { get; set; }
+        public DateTime ChangedAt { get; set; }
+        
+        public bool IsDeleted { get; set; }
 
         public static implicit operator RematoDevice([NotNull] DeviceEntity entity) => new()
         {
             DeviceId = entity.Id,
             State = entity.State,
+            CreatedAt = entity.CreatedAt,
+            ChangedAt = entity.ChangedAt
         };
         
         public static implicit operator DeviceEntity([NotNull] RematoDevice device) => new()
         {
             Id = device.DeviceId,
-            State = device.State
+            State = device.State,
+            CreatedAt = device.CreatedAt,
+            ChangedAt = device.ChangedAt
         };
     }
 }

@@ -4,6 +4,8 @@ namespace Remato
 {
     public interface IRematoService
     {
+        IRematoServiceAuthorization Authorization();
+        
         IRematoUserService User(string userIdOrName);
         IRematoUsersService Users();
 
@@ -15,8 +17,8 @@ namespace Remato
         IRematoServiceVehicle Vehicle(string vehicleId);
         IRematoServiceVehicles Vehicles();
 
-        object Issue(string issueId);
-        object Issues();
+        IRematoServiceIssue Issue(string issueId);
+        IRematoServiceIssues Issues();
     }
     
     public interface IRematoServiceEntity<TEntity, out TParams> : 
@@ -36,7 +38,24 @@ namespace Remato
         
     }
     
+    public interface IRematoServiceAuthorization
+    {
+        ITalaryonRunner<UserEntity> GetAuthenticatedUser();
+        ITalaryonRunner<string> GetAuthenticatedToken();
+        IRematoServiceAuthorizationAuthentication Authenticate();
+    }
     
+    public interface IRematoServiceAuthorizationAuthentication
+    {
+        ITalaryonRunner<IRematoServiceAuthorizationResult> With(string username, string password);
+        ITalaryonRunner<IRematoServiceAuthorizationResult> With(string token);
+    }
+
+    public interface IRematoServiceAuthorizationResult
+    {
+        UserEntity User { get; }
+        string Token { get; }
+    }
 
     public interface IRematoServiceVehicle : IRematoServiceEntity<VehicleEntity, IVehicleParams>
     {
@@ -64,6 +83,16 @@ namespace Remato
     }
     
     public interface IRematoServiceTrainees : IRematoServiceEntities<TraineeEntity, ITraineeParams>
+    {
+        
+    }
+    
+    public interface IRematoServiceIssue : IRematoServiceEntity<IssueEntity, IIssueParams>
+    {
+        
+    }
+    
+    public interface IRematoServiceIssues : IRematoServiceEntities<IssueEntity, IIssueParams>
     {
         
     }

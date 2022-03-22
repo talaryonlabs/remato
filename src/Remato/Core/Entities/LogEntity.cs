@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using Dapper.Contrib.Extensions;
-using Microsoft.Extensions.Logging;
 using Remato.Shared;
 
 namespace Remato
@@ -11,19 +10,27 @@ namespace Remato
     {
         [Key] public int Id { get; set; }
         public DateTime Date { get; set; }
-        public LogLevel Level { get; set; }
-        public string Category { get; set; }
+        public RematoLogType Type { get; set; }
         public string Message { get; set; }
-        public string Exception { get; set; }
+
+        public string ContentId { get; set; }
+        public RematoContentType ContentType { get; set; }
+
+        public string UserId { get; set; }
+        public string UserName { get; set; }
+        
+        [Computed] public string ContentTitle { get; set; }
         
         public static implicit operator RematoLog([NotNull] LogEntity entity) => new ()
         {
             LogId = entity.Id,
-            Level = entity.Level,
             Date = entity.Date,
-            Category = entity.Category,
+            Type = entity.Type,
             Message = entity.Message,
-            Exception = entity.Exception
+            ContentId = entity.ContentId,
+            ContentType = entity.ContentType,
+            UserId = entity.UserId,
+            UserName = entity.UserName
         };
     }
 }

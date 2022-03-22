@@ -11,7 +11,7 @@ namespace Remato.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [ApiRoute("trainees")]
-    public class TraineeController
+    public class TraineeController : Controller
     {
         private readonly IRematoService _rematoService;
 

@@ -11,7 +11,7 @@ namespace Remato.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [ApiRoute("logs")]
-    public class LogController
+    public class LogController : Controller
     {
         [HttpGet]
         [Authorize(Policy = RematoConstants.ManagementPolicy)]

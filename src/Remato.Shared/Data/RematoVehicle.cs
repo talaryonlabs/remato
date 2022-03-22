@@ -16,6 +16,11 @@ namespace Remato.Shared
         
         [JsonProperty("start_date")] public DateTime StartDate { get; set; }
         [JsonProperty("end_date")] public DateTime EndDate { get; set; }
+        
+        [JsonProperty("is_deleted")] public bool IsDeleted { get; set; }
+        
+        [JsonProperty("created_at")] public DateTime CreatedAt { get; set; }
+        [JsonProperty("changed_at")] public DateTime ChangedAt { get; set; }
     }
     
     [JsonObject]

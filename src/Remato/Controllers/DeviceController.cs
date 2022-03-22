@@ -12,7 +12,7 @@ namespace Remato.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [ApiRoute("devices")]
-    public class DeviceController
+    public class DeviceController : Controller
     {
         private readonly IRematoService _rematoService;
 
@@ -43,9 +43,7 @@ namespace Remato.Controllers
                     .SkipUntil(listArgs.Cursor)
                     .Take(listArgs.Limit)
                     .Where(whereParams => whereParams
-                        .Id(listArgs.Id)
-                        .Name(listArgs.Name)
-                        .IsActive(listArgs.IsActive)
+                        .Id(listArgs.DeviceIdOrName)
                     )
                     .RunAsync(cancellationToken)
             ).ToList();

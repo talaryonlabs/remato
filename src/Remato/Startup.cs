@@ -1,3 +1,5 @@
+using System;
+using System.Net;
 using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,11 +12,23 @@ namespace Remato
 {
     public class Startup
     {
-        private readonly StoragrConfig _config;
+        private readonly RematoConfig _config;
 
         public Startup(IConfiguration configuration)
         {
-            _config = new StoragrConfig("Storagr.Server", configuration);
+            var test = configuration["REMATO_ENDPOINT"];
+            var endpoint = IPEndPoint.Parse(test);
+            
+            _config = new RematoConfig()
+            {
+                TokenOptions = new TokenOptions()
+                {
+                    Audience = "",
+                    Expiration = TimeSpan.FromDays(2),
+                    Issuer = "localhost",
+                    Secret = "lockdown-1234"
+                }
+            }; // TODO
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
